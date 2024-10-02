@@ -1,0 +1,157 @@
+---
+title: "Pertemuan 2 - Sort dan Dasar Visualisasi Data"
+author: "ryankny"
+date: "2024-09-11"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Sorting
+
+### sort()
+
+```{r sort}
+vektor = c(26,2,20,3)
+sort(vektor)
+```
+
+```{r}
+library(dslabs)
+data(murders)
+# View(murders)
+
+sort(murders$total, decreasing = TRUE)
+```
+
+### order()
+
+```{r}
+vektor
+order(vektor)
+
+
+index = order(vektor)
+```
+
+```{r}
+ind = order(murders$total, decreasing = TRUE)
+murders$total[ind]
+murders$state[ind]
+```
+
+### rank()
+
+```{r}
+vektor
+rank(-vektor)
+
+index = order(rank(vektor), decreasing = TRUE)
+vektor[index]
+```
+
+```{r}
+rank(murders$total, ties.method = "min")
+```
+### max/min & which.max/min
+```{r}
+max(murders$total)
+which.max(murders$total)
+
+min(murders$total)
+which.min(murders$total)
+```
+
+## Dasar Visualisasi Data
+
+### plot
+
+
+```{r}
+populasi = murders$population / 10^6
+total_kasus = murders$total
+
+plot(populasi,
+     total_kasus,
+     xlab = "Jumlah populasi dalam satuan juta",
+     ylab = "Total kasus",
+     main = "Statistik pembunuhan bersenjata di US",
+     col = "#f4e300"
+     )
+
+```
+
+## scatter plot
+####line graph
+
+```{r}
+data_bbm = data.frame(
+  year = c(2014:2024),
+  price = c(5500, 7400, 6500, 8700, 4600, 5600, 6700, 7300, 8900, 6000, 7800)
+)
+
+plot(data_bbm$year,
+     data_bbm$price,
+     type = "b",
+     xlab = "Tahun",
+     ylab = "Harga BBM per liter (Rp)",
+     main = "Data harga BBM dari 2014-2024",
+     col = "blue"
+     )
+```
+## Barplot
+
+```{r}
+barplot(
+  data_bbm$price ~ data_bbm$year,
+  xlab = "Tahun",
+  ylab = "Harga BBM per liter (Rp)",
+  main = "Data harga BBM dari 2014-2024",
+  las = 2
+)
+```
+```{r}
+barplot(
+  murders$total ~ murders$abb,
+  las = 2,
+  xlab = "State (negara bagian)",
+  ylab = "Total kasus"
+)
+
+```
+## histogram
+
+```{r}
+hist(
+  murders$total,
+  main = "Total pembunuhan bersenjata di US",
+  xlab = "Jumlah kasus",
+  ylab = "Frekuensi",
+  col = "yellow",
+  border = "cyan"
+)
+
+```
+## boxplot
+
+```{r}
+murders$rate = murders$total / murders$population * 10^6
+boxplot(
+  rate ~ region,
+  data = murders,
+  main = "Tingkat pembunuhan bersenjata disetiap region",
+  xlab = "Region",
+  ylab = "Tingkat pembunuhan per 1 juta penduduk",
+  col = "lightblue"
+)
+```
+
+## image
+```{r}
+x = matrix(1:120, ncol = 12, nrow = 10)
+image(x,
+      col = hcl.colors(12, "viridis", rev = TRUE))
+```
+

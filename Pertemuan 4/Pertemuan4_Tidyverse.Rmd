@@ -1,0 +1,120 @@
+---
+title: "Pertemuan 4 - Tidyverse"
+author: "ryankny"
+date: "2024-09-25"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import Library
+
+```{r}
+library(dslabs)
+library(tidyverse)
+data(murders)
+# View(murders)
+```
+
+## mutate
+
+```{r}
+# tambah kolom
+murders = mutate(murders, rate = total / population * 10^5)
+## head(murders)
+
+# ubah kolom
+murders = mutate(murders, rate = 0)
+
+# hapus kolom
+murders = mutate(murders, rate = NULL)
+```
+
+## filter
+
+```{r}
+#filter(murders, region == 'West')
+#filter(murders, 100 < total & total < 500)
+filter(murders, region == 'West' | region == 'East')
+```
+
+## select
+
+```{r}
+new_table = select(murders, state, total)
+new_table
+```
+
+# Operator Pipe
+
+```{r}
+sqrt(16) # tanpa operator pipe
+16 %>% sqrt() # menggunakan operator pipe
+```
+
+```{r}
+filter(murders, total > 100) # tanpa operator pipe
+murders %>% filter(total > 100) # menggunakan operator pipe
+```
+
+```{r}
+# menggunakan operator pipe
+murders %>% mutate(rate = total / population * 10^5) %>% filter(rate <= 0.71)%>% select(state, region, rate)
+```
+
+```{r}
+# tanpa operator pipe
+select(filter(mutate(murders, rate = total / population * 10^5), rate <= 0.71),
+state, region, rate)
+```
+
+## sumarize
+
+```{r}
+murders %>% summarize(jumlah = sum(total), rata_rata = mean(total))
+```
+
+## group_by
+
+```{r}
+murders %>% group_by(region) %>% summarize(jumlah = sum(total),
+rata_rata = mean(total))
+```
+
+# Sorting Data Frame
+
+## arrange
+
+```{r}
+murders %>% arrange(desc(total))
+```
+
+## nested_sorting
+
+```{r}
+murders %>% arrange(region, desc(total))
+```
+
+## top_n
+
+```{r}
+murders %>% top_n(5, total)
+```
+
+
+
+## Latihan Soal
+
+```{r}
+murders = mutate(murders, rate = total / population * 10^5)
+murders = mutate(murders, peringkat = rank(desc(rate)))
+murders %>% filter(peringkat<=5)
+
+##murders %>% filter((region == 'Northeast' | region == 'West') & rate < 1) %>% select(state, rate, peringkat)
+```
+
+

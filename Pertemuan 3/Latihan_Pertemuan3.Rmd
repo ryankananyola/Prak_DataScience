@@ -1,0 +1,67 @@
+---
+title: "Latihan - Pertemuan3"
+author: "ryankny"
+date: "2024-09-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Latihan
+
+### nomor 1
+
+```{r}
+library(dslabs)
+data(murders)
+
+new_names = ifelse(nchar(murders$state) > 8, murders$abb, murders$state)
+new_names
+```
+
+
+### nomor 2
+
+```{r}
+sum_n = function(n) {
+  return(sum(1:n))
+}
+
+hasil = sum_n(5000)
+print(hasil)
+```
+
+### nomor 3
+
+```{r}
+compute_s_n = function(n) {
+  return(sum((1:n)^2))
+}
+
+hasil = compute_s_n(10)
+print(hasil)
+
+```
+
+
+### nomor 4
+
+```{r}
+s_n = vector("numeric", 25)
+
+for (n in 1:25) {
+  s_n[n] = compute_s_n(n)
+}
+
+s_n
+```
+
+
+### nomor 5
+
+```{r}
+sapply(1:25, compute_s_n)
+```
+

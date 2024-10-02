@@ -1,0 +1,105 @@
+---
+title: "Latihan_Kuis"
+author: "YohanesFebryanKanaNyola_123220198"
+date: "2024-10-01"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1.import library dan load dataset "movielens"
+```{r}
+library(dslabs)
+library(tidyverse)
+data(movielens)
+#View(movielens)
+```
+
+### 2. Tampilkan banyak baris/entri dan semua nama kolom/variabel
+
+```{r}
+length(movielens$movieId)
+
+names(movielens)
+```
+### 3. Tampilkan tipe data dari kolom/variabel
+
+```{r}
+class(movielens$movieId)
+class(movielens$genres)
+```
+
+### 4. Tampilkan ada berapa film ("movieId") berbeda pada dataset tersebut
+
+```{r}
+length(unique(movielens$movieId))
+```
+### 5. Tampilkan 5 baris/entri dengan "genres" mengandung "Comedy"! Tampilkan "title" dan "genres" saja!
+
+```{r}
+movielens %>% filter(genres == "Comedy") %>% select(title, genres) %>% head(5)
+```
+
+### 6. Tampilkan 10 data teratas dari semua film Toy Story ("Toy Story", "Toy Story 2", "Toy Story 3", "Toy Stort of Terror") diurutkan berdasarkan "rating"! Tampilkan kolom/variabel "title" dan "rating" saja!
+
+```{r}
+movielens %>% filter(title == "Toy Story" | title == "Toy Story 2" | title == "Toy Story 3" | title == "Toy Story of Terror") %>% arrange(desc(rating)) %>% select(title, rating) %>% head(10)
+```
+
+### 7. Klasifikasikan data tersebut berdasarkan "rating" dengan kondisi:
+- Rating == 5 dikategorikan sebagai "Big W"
+- 3 <= Rating < 5 dikategorikan sebagai "W"
+- 1 <= Rating < 3 dikategorikan sebagai "L"
+- Selain itu, dikategorikan sebagai "Big L"
+Simpan hasil klasifikasi tersebut ke dalam vector bernama "category" dan tampilkan 1 0 data dari vector tersebut!
+
+```{r}
+category = ifelse(movielens$rating == 5, "Big W", ifelse(movielens$rating <=3 & movielens$rating < 5, "W", ifelse(movielens$rating >=1 & movielens$rating < 3, "L", "Big L")))
+head(category, 10)
+```
+### 8. Tambahkan kolom/variabel baru pada dataset "movielens" bernama "category" yang telah dibuat di No.7!
+
+```{r}
+movielens = mutate(movielens, category)
+```
+
+### 9. Carilah frekuensi dari kolom "category"! Simpan hasilnya ke dalam data frame baru bernama
+"category_frequency" (ada 2 kolom dengan nama "category" dan "frequency") dan tampilkan data frame
+tersebut! Tampilkan juga category dengan frequency tertinggi!
+
+```{r}
+category_freq = table(category)
+category_frequency = as.data.frame(category_freq)
+colnames(category_frequency) = c("category", "frequency")
+print(category_frequency)
+```
+
+```{r}
+frequency_tertinggi = category_frequency[which.max(category_frequency$frequency)]
+print(frequency_tertinggi)
+```
+
+
+### 10. Visualisasikan data frame "category _frequency" menggunakan bar plot dengan judul "Category Frequency"
+dan parameter las = 1 ! Pastikan jenis-jenis "category" tampil di bawah bar masing-masing.
+
+```{r}
+# Membuat bar plot untuk category_frequency
+barplot(
+  category_frequency$frequency,            # Nilai frekuensi
+  names.arg = category_frequency$category, # Menampilkan kategori di bawah bar
+  main = "Category Frequency",              # Judul plot
+  las = 1,                                  # Label sumbu x horizontal
+  col = "lightyellow",                        # Warna bar
+  xlab = "Category",                        # Label sumbu x
+  ylab = "Frequency",                       # Label sumbu y
+  cex.axis = 0.6,      
+  cex.lab = 1.2,       
+  cex.main = 1.5
+)
+
+```

@@ -1,0 +1,103 @@
+---
+title: "Kuis IF-F"
+author: "YOHANES FEBRYAN KANA NYOLA_123220198"
+date: "2024-10-02"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Kuis
+
+## Aturan main:
+
+1. Berdoa terlebih dahulu sebelum mengerjakan.
+2. Kerjakan soal-soal yang ada! Jangan lupa tulis NAMA dan NIM pada author (line 3).
+3. Jawablah dengan mengisi chunk di bawah soal! Chunk boleh lebih dari satu jika diperlukan.
+4. Durasi pengerjaan selama 1 jam 45 menit. Toleransi keterlambatan max 5 menit.
+5. No AI (ChatGPT, Gemini, dll.) dan tidak boleh searching di internet.
+6. Boleh buka dokumentasi RStudio (help).
+7. Export hasilnya ke dalam format PDF, dengan penamaan NIM_NAMA_Kuis.pdf
+8. Good Luck Have Fun!
+
+## Soal
+
+1. Import library yang diperlukan kemudian load dataset "gapminder"!
+```{r}
+library(dslabs)
+library(tidyverse)
+library(dplyr)
+
+data(gapminder)
+#View(gapminder)
+```
+
+2. Tampilkan banyak baris/entri dan semua nama kolom/variabel pada dataset tersebut!
+```{r}
+# banyak baris
+length(gapminder$country)
+
+# nama kolom pada dataset
+names(gapminder)
+```
+
+3. Tampilkan tipe data dari kolom/variabel "continent"!
+```{r}
+class(gapminder$continent)
+```
+
+4. Tampilkan ada berapa negara berbeda pada dataset tersebut! Jangan hitung "Israel"!
+```{r}
+length(unique(gapminder$country[gapminder$country != "Israel"]))
+```
+
+5. Tampilkan nama kolom/variabel dari dataset tersebut yang terdapat nilai NA!
+```{r}
+names(gapminder)[sapply(gapminder, anyNA)]
+```
+
+6. Untuk setiap kolom/variabel dari dataset tersebut yang terdapat nilai NA, buatlah sebuah vector yang menyimpan nilai-nilai dari kolom tersebut. Jika nilai sel di kolom tersebut adalah NA, simpan angka 0 ke dalam vector. Nama vector harus mengikuti format "vector_namaKolom", di mana "namaKolom" adalah nama kolom dari dataset. Contoh: vector_infant_mortality. Tampilkan 5 data dari masing-masing vector tersebut!
+```{r}
+vector_infant_mortality = ifelse(gapminder$infant_mortality == NA, "0")
+head(vector_infant_mortality, 5)
+```
+```{r}
+# vector_gdp = ifelse(gapminder$gdp == is.na(TRUE), "0")
+# head(vector_gdp, 5)
+```
+
+
+7. Ubah setiap kolom/variabel dari dataset tersebut yang terdapat nilai NA, dengan nilai masing-masing vector yang telah dibuat di No.6!
+```{r}
+
+```
+
+8. Tampilkan 10 data dari "continent" Asia atau Africa diurutkan menurun berdasarkan "gdp" pada tahun 1998! Tampilkan kolom/variabel "country" dan "gdp" saja!
+```{r}
+gapminder %>% arrange(desc(gdp)) %>% filter((continent == "Asia" | continent == "Africa"), year == 1998) %>% select(country, gdp) %>% head(10)
+```
+
+9. Carilah rata-rata untuk "gdp" dari "continent" Asia yang dikelompokkan berdasarkan "region" (ada 2 kolom dengan nama "region" dan "average_gdp")!
+```{r}
+gapminder %>% filter(continent == "Asia") %>% group_by(region) %>% summarize(average_gdp = mean(gdp, na.rm = TRUE))
+```
+
+10. Visualisasikan "gdp" negara "Indonesia" dari tahun 1990 sampai 2010 dalam bentuk line graph dengan judul "Indonesia's GDP Over the Years (1990-2010)"! Beri nama xlab = "Year" dan ylab = "GDP"!
+```{r}
+
+# ggplot(year = gapminder$year[gapminder$year >=1990, gapminder$year <=2010],
+#   gdp = gapminder$gdp
+#   xlab = "Year",
+#   ylab = "GDP",
+#   main = "Indonesia's GDP Over the Years (1990-2020)",
+#   cex.axis = 0.5,
+#   cex.lab = 1.2,
+#   cex.main = 1.5
+# )
+```
+
+Tetap semangat!
