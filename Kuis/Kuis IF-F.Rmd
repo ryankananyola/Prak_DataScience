@@ -62,18 +62,29 @@ names(gapminder)[sapply(gapminder, anyNA)]
 
 6. Untuk setiap kolom/variabel dari dataset tersebut yang terdapat nilai NA, buatlah sebuah vector yang menyimpan nilai-nilai dari kolom tersebut. Jika nilai sel di kolom tersebut adalah NA, simpan angka 0 ke dalam vector. Nama vector harus mengikuti format "vector_namaKolom", di mana "namaKolom" adalah nama kolom dari dataset. Contoh: vector_infant_mortality. Tampilkan 5 data dari masing-masing vector tersebut!
 ```{r}
-vector_infant_mortality = ifelse(gapminder$infant_mortality == NA, "0")
-head(vector_infant_mortality, 5)
-```
-```{r}
-# vector_gdp = ifelse(gapminder$gdp == is.na(TRUE), "0")
-# head(vector_gdp, 5)
-```
+# Cek apakah ada NA di setiap kolom dan ganti dengan 0, simpan dalam vector baru
+vector_infant_mortality <- ifelse(is.na(gapminder$infant_mortality), 0, gapminder$infant_mortality)
+vector_fertility <- ifelse(is.na(gapminder$fertility), 0, gapminder$fertility)
+vector_population <- ifelse(is.na(gapminder$population), 0, gapminder$population)
+vector_gdp <- ifelse(is.na(gapminder$gdp), 0, gapminder$gdp)
 
+# Tampilkan 5 data dari masing-masing vector
+head(vector_infant_mortality, 5)
+head(vector_fertility, 5)
+head(vector_population, 5)
+head(vector_gdp, 5)
+```
 
 7. Ubah setiap kolom/variabel dari dataset tersebut yang terdapat nilai NA, dengan nilai masing-masing vector yang telah dibuat di No.6!
 ```{r}
+# Ubah kolom di dataset dengan vektor yang telah dibuat
+gapminder$infant_mortality <- vector_infant_mortality
+gapminder$fertility <- vector_fertility
+gapminder$population <- vector_population
+gapminder$gdp <- vector_gdp
 
+# Periksa hasil untuk memastikan NA telah diganti
+head(gapminder, 5)
 ```
 
 8. Tampilkan 10 data dari "continent" Asia atau Africa diurutkan menurun berdasarkan "gdp" pada tahun 1998! Tampilkan kolom/variabel "country" dan "gdp" saja!
@@ -88,16 +99,27 @@ gapminder %>% filter(continent == "Asia") %>% group_by(region) %>% summarize(ave
 
 10. Visualisasikan "gdp" negara "Indonesia" dari tahun 1990 sampai 2010 dalam bentuk line graph dengan judul "Indonesia's GDP Over the Years (1990-2010)"! Beri nama xlab = "Year" dan ylab = "GDP"!
 ```{r}
+# Filter data untuk Indonesia dari tahun 1990 hingga 2010
+indonesia_gdp <- subset(gapminder, country == "Indonesia" & year >= 1990 & year <= 2010)
 
-# ggplot(year = gapminder$year[gapminder$year >=1990, gapminder$year <=2010],
-#   gdp = gapminder$gdp
-#   xlab = "Year",
-#   ylab = "GDP",
-#   main = "Indonesia's GDP Over the Years (1990-2020)",
-#   cex.axis = 0.5,
-#   cex.lab = 1.2,
-#   cex.main = 1.5
-# )
+# Plot line graph menggunakan ggplot2
+ggplot(indonesia_gdp, aes(x = year, y = gdp)) +
+  geom_line(color = "blue", size = 1.2) +               # Perbesar ukuran garis
+  geom_point(color = "red", size = 3) +                 # Perbesar ukuran titik
+  labs(title = "Indonesia's GDP Over the Years (1990-2010)",
+       x = "Year",
+       y = "GDP") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),  # Judul lebih besar, bold, dan center
+    axis.title.x = element_text(size = 14),                            # Ukuran label sumbu x
+    axis.title.y = element_text(size = 14),                            # Ukuran label sumbu y
+    axis.text.x = element_text(size = 12),                             # Ukuran angka di sumbu x
+    axis.text.y = element_text(size = 12)                              # Ukuran angka di sumbu y
+  ) +
+  scale_y_continuous(labels = scales::comma)                           # Format sumbu y dengan koma untuk ribuan/miliar
+
+
 ```
 
 Tetap semangat!
