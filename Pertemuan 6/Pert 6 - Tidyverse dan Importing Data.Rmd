@@ -1,0 +1,189 @@
+---
+title: "Pertemuan 6 - Tidyverse dan Importing Data"
+author: "YOHANES FEBRYAN KANA NYOLA_123220198"
+date: "2024-10-23"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# import library
+
+```{r}
+library(dslabs)
+library(tidyverse)
+```
+
+## tibble
+
+### perbedaan pertama
+
+```{r}
+# subsetting dataset murders kolom total
+use_df = murders[,'total']
+use_df
+```
+
+```{r}
+# dengan tibble
+use_tbl = as_tibble(murders)[,'total']
+use_tbl
+```
+
+```{r}
+# fungsi class
+class(use_df)
+class(use_tbl)
+```
+
+### perbedaan kedua
+
+```{r}
+# memanggil kolom yang tidak tersedia
+murders$Population
+as_tibble(murders)$Population
+```
+
+```{r}
+tibble(
+  nama = c('tes', 'tes1', 'tes2'),
+  fungsi = c(sum, mean, sd)
+)
+```
+
+```{r}
+grades <- data.frame(names = c("John", "Juan", "Jean", "Yao"), 
+exam_1 = c(95, 80, 90, 85), 
+exam_2 = c(90, 85, 85, 90)) 
+class(grades$names)
+```
+
+## dot operator
+
+```{r}
+# tanpa pipeline
+filtered_data = filter(murders,region == 'South')
+mutated_data = mutate(filtered_data, rate = total/population * 10^6)
+mutated_data$rate
+
+# tanpa dot operator
+filtered_data_pipeline = murders %>%
+  filter(region == 'South') %>%
+  mutate(rate = total/population * 10^6)
+filtered_data_pipeline$rate
+
+# dengan dot operator
+murders %>%
+  filter(region == 'South') %>%
+  mutate(rate = total/population * 10^6) %>%
+  .$rate
+
+# fungsi pull
+murders %>%
+  filter(region == 'South') %>%
+  mutate(rate = total/population * 10^6) %>%
+  pull(rate)
+
+```
+
+## purrr package (map)
+
+```{r}
+compute_s_n = function(n){
+  x = 1:n
+  sum(x)
+  # as_character(sum(x)) -> sebagai karakter
+  # tibble(sum=sum(x)) -> sebagai dataframe
+}
+n = 1:25
+s_n = sapply(n, compute_s_n)
+class(s_n)
+s_n
+```
+
+```{r}
+# library(purrr)
+# s_n = map_int(n, compute_s_n) -> integer
+# s_n = map_dbl(n, compute_s_n) -> double
+# s_n = map_chr(n, compute_s_n) -> char
+# s_n = map_lgl(n, compute_s_n) -> logika
+# s_n = map_df(n, compute_s_n) -> dataframe
+s_n = map(n, compute_s_n) # -> list
+class(s_n)
+s_n
+```
+
+
+## tidyverse conditional
+
+```{r}
+x = c(-2, -1, 0, 1, 2) 
+case_when(x < 0 ~ "Negatif Njir",
+          x > 0 ~ "Positif Bang",
+          TRUE ~ "Dasar Kosongg") 
+```
+
+```{r}
+# pada dataset murders
+case_when(murders$population > 1e7 ~ "Banyak banget",
+          between(murders$population, 1e6, 1e7) ~ "Banyak",
+          TRUE ~ "Dikit")
+```
+
+
+## importing data
+
+```{r}
+library(here)
+here()
+# dr_here()
+here("data raw", "Iris1.csv")
+```
+
+### import dataset excel
+
+```{r}
+library(readxl)
+path = here("data raw", "JKT48_frame_2020.xlsx")
+jkt48 = read_xlsx(path)
+# View(jkt48)
+```
+
+## import dataset delimited
+
+```{r}
+library(readr)
+path = here("data raw", "Iris1.csv")
+iris1 = read_csv(path)
+# View(iris1)
+
+library(vroom)
+iris1 = vroom(path)
+```
+
+## import dataset delimited
+
+```{r}
+list_iris <- list.files(path = here("data raw"), pattern =
+"Iris", full.names = TRUE)
+list_iris
+```
+
+## functional iteration
+
+```{r}
+iris_lapply = lapply(list_iris, read_csv)
+iris_lapply = Reduce(rbind, iris_lapply)
+# View(iris_lapply)
+```
+
+```{r}
+iris_vroom = vroom(list_iris)
+
+identical(iris_lapply, iris_vroom)
+```
+
