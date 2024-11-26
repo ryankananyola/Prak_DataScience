@@ -1,0 +1,208 @@
+---
+title: "Pert 7 - Visualisasi Data dengan R Package : ggplot2"
+author: "YOHANES FEBRYAN KANA NYOLA_123220198"
+date: "2024-11-06"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Visualisasi Data dengan ggplot2
+
+## 1. Geom_point
+
+### Import Library
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(dslabs)
+```
+
+### Importing Data
+
+```{r}
+# Membaca data dari file CSV bernama "data_orang.csv" dan menyimpannya ke dalam variabel data_orang
+data_orang = read.csv("data raw/data_orang.csv")
+# View(data_orang)
+
+# Membaca data dari file Excel bernama "data_video_game.xlsx" dan menyimpannya ke dalam variabel data_vg
+data_vg = read_excel("data raw/data_video_game.xlsx")
+# View(data_vg)
+```
+
+```{r}
+# Membuat plot dengan ggplot, menggunakan data dari data_vg
+ggplot(
+  data = data_vg, # Mengatur data yang digunakan untuk plot
+  aes(
+    x = NA_Sales, # Mengatur NA_Sales sebagai sumbu x
+    y = Global_Sales, # Mengatur Global_Sales sebagai sumbu y
+    color = Genre # Mengatur Genre sebagai faktor warna
+  )
+) + geom_point( # Menambahkan titik-titik ke plot
+  color = "red" # Mengatur warna titik menjadi merah (ini akan menimpa pengaturan color di aes)
+) + labs(
+  title = "NA Sales dan Global Sales Video Game", # Menambahkan judul grafik
+  x = "Jumlah NA Sales", # Menambahkan label sumbu x
+  y = "Jumlah Global Sales"  # Menambahkan label sumbu y
+) + theme_linedraw() + facet_wrap(~Genre, scales = "free") # # Mengatur tema menjadi linedraw dan Membuat sub-plot berdasarkan Genre dengan skala bebas
+```
+
+## 2. Geom_bar
+
+```{r}
+ggplot(
+  data = data_vg,
+  aes(
+    x = Genre,
+  )
+) + geom_bar(
+  color = "cyan",
+  fill = "yellow"
+) + labs(
+  title = "Jumlah Genre Video Game",
+  x = "Nama Genre",
+  y = "Jumlah"
+)
+```
+
+## 3. Geom_line
+
+```{r}
+new_data_vg = data_vg %>%
+  group_by(Year) %>%
+  summarize(Total_NA =  sum(NA_Sales),
+            Total_Global = sum(Global_Sales))
+
+ggplot(
+  data = new_data_vg,
+  aes(
+    x = Year,
+    y = Total_Global
+  )
+) + geom_line(
+  color = "purple"
+) + labs(
+  title = "Penjualan Global Video Game 1984 - 2015",
+  x = "Tahun",
+  y = "Penjualan (Juta)"
+)
+```
+
+## 4. Pie_Chart
+
+```{r}
+new_data_orang = data_orang %>% group_by(Sex) %>% summarize(Total = n())
+ggplot(
+  new_data_orang,
+  aes(
+    x = Total,
+    y = "",
+    fill = Sex
+  )
+) + geom_col() + coord_polar() + theme_void()
+```
+
+# -------------------------------------------------
+
+# Data Wraggling
+
+```{r}
+path = system.file("extdata", package = "dslabs")
+filename = file.path(path, "fertility-two-countries-example.csv")
+wide_data = read.csv(filename)
+```
+
+## 1. Gather
+
+```{r}
+gathered_data = wide_data %>% gather(year, fertility_rate, -country, convert = TRUE)
+
+gathered_data
+```
+
+## 2. Spread
+
+```{r}
+spread_data = gathered_data %>% spread(year, fertility_rate)
+
+spread_data
+```
+
+## 3. Joining Data
+
+```{r}
+data(murders)
+data(polls_us_election_2016)
+
+join_data = left_join(murders, polls_us_election_2016, by = "state") %>%
+  select(state,samplesize) %>% group_by(state) %>%
+  summarise(totalsamplesize = sum(samplesize, na.rm = TRUE))
+
+join_data
+```
+
+```{r}
+tab1 = slice(murders, 1:6) %>% select(state, population)
+
+tab1
+```
+
+```{r}
+tab2 = results_us_election_2016 %>%
+  filter(state %in% c("Alabama", "Alaska", "Arizona",
+                      "California", "Connecticut", "Delaware")) %>%
+  select(state, electoral_votes) %>% rename(ev = electoral_votes)
+
+tab2
+```
+
+### 3.1 Left Join
+
+```{r}
+left_join = left_join(tab1, tab2, by = "state")
+left_join
+```
+
+### 3.2 Right Join
+
+```{r}
+right_join = right_join(tab1, tab2, by = "state")
+right_join
+```
+
+
+### 3.3 Inner Join
+
+```{r}
+inner_join = inner_join(tab1, tab2, by = "state")
+inner_join
+```
+
+
+### 3.4 Full Join
+
+```{r}
+full_join = full_join(tab1, tab2, by = "state")
+full_join
+```
+
+### 3.5 Semi Join
+
+```{r}
+semi_join = semi_join(tab1, tab2, by = "state")
+semi_join
+```
+
+### 3.6 Anti Join
+
+```{r}
+anti_join = anti_join(tab2, tab1, by = "state")
+anti_join
+```
+
