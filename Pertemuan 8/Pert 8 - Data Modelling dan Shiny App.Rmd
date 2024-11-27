@@ -1,0 +1,204 @@
+---
+title: "Pert 8 - Data Modelling dan Shiny App"
+author: "YOHANES FEBRYAN KANA NYOLA_123220198"
+date: "2024-11-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Modelling dan Shiny App
+
+## Data Modelling
+
+### Import Library
+
+```{r}
+library(tidyverse)
+library(dslabs)
+library(tidymodels)
+library(vroom)
+library(here)
+```
+
+### Import Data
+
+```{r}
+path = here('data-raw', 'un_smp.csv')
+un_smp = vroom(path)
+un_smp = un_smp %>%
+  mutate(tahun = as.character(tahun))
+str(un_smp)
+```
+
+### Supervised Learning
+
+Set seed untuk mengontrol pengecekan data sebelum splitting menjadi data training dan testing
+
+```{r}
+set.seed(42)
+un_smp_split = un_smp %>%
+  initial_split(prop = 0.8)
+un_smp_split
+```
+
+```{r}
+set.seed(5)
+sample(1:10, 6)
+```
+
+#### Buat resep
+
+```{r}
+un_smp_recipe = training(un_smp_split) %>%
+  recipe() %>%
+  update_role(
+    tahun,
+    status,
+    jumlah_peserta,
+    bahasa_indonesia,
+    bahasa_inggris,
+    matematika,
+    new_role = "predictor"
+  ) %>%
+  update_role(
+    ipa,
+    new_role = "outcome"
+  ) %>%
+  update_role(
+    nama_sekolah,
+    new_role = "ID"
+  ) %>%
+  step_corr(
+    all_predictors(),
+    -tahun,
+    -status
+  )
+
+un_smp_recipe
+```
+
+#### Terapkan resep
+
+```{r}
+un_smp_training = un_smp_recipe %>%
+  prep() %>%
+  bake(
+    training(un_smp_split)
+  )
+
+un_smp_testing = un_smp_recipe %>%
+  prep() %>%
+  bake(
+    testing(un_smp_split)
+  )
+```
+
+
+#### Training Model
+Training model dengan metode linear regression
+
+```{r}
+un_smp_lm = linear_reg(mode = "regression") %>%
+  set_engine("lm") %>%
+  fit(
+    ipa ~ . -nama_sekolah,
+    data = un_smp_training
+  )
+
+un_smp_lm
+```
+
+#### Prediksi dan Evaluasi
+
+```{r}
+un_smp_lm %>%
+  predict(un_smp_testing) %>%
+  bind_cols(un_smp_testing) %>%
+  metrics(
+    truth = ipa,
+    estimate = .pred
+  )
+```
+
+
+### Unsupervised Learning
+
+#### Load Data
+
+```{r}
+data(gapminder)
+```
+
+#### Preprocessing Data
+
+Mengganti nilai NA menjadi rata rata dari kolom tersebut
+
+```{r}
+gapminder$infant_mortality[is.na(gapminder$infant_mortality)] = mean(gapminder$infant_mortality, na.rm = TRUE)
+
+gapminder$life_expectancy[is.na(gapminder$life_expectancy)] = mean(gapminder$life_expectancy, na.rm = TRUE)
+
+gapminder$fertility[is.na(gapminder$fertility)] = mean(gapminder$fertility, na.rm = TRUE)
+
+gapminder$gdp[is.na(gapminder$gdp)] = mean(gapminder$gdp, na.rm = TRUE)
+```
+
+Ambil data gapminder di tahun 2004
+
+```{r}
+gapminder_2004 = gapminder %>%
+  filter(year == 2004) %>%
+  select(country, infant_mortality, life_expectancy, fertility, population, gdp)
+
+head(gapminder_2004)
+```
+
+Scalling Data
+
+```{r}
+gapminder_2004_scaled = gapminder_2004 %>%
+  select(-country) %>% scale()
+
+head(gapminder_2004_scaled)
+```
+
+#### Training Data
+
+```{r}
+set.seed(123)
+kmeans_result = kmeans(gapminder_2004_scaled,
+                       center = 4,
+                       nstart = 10)
+
+gapminder_2004$cluster = as.factor(kmeans_result$cluster)
+```
+
+#### Elbow Method
+
+```{r}
+
+```
+
+
+#### Visualisasi Data
+
+```{r}
+ggplot(
+  gapminder_2004,
+  aes(
+    x = gdp,
+    y = life_expectancy,
+    color = cluster
+  )
+) + geom_point(
+  size = 3
+) + labs(
+  title = "Clustering Gapminder Data (2004)",
+  x = "GDP",
+  y = "Life Expectancy"
+) + theme_minimal() + scale_x_log10()
+```
+
