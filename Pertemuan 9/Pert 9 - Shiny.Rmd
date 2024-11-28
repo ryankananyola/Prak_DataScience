@@ -1,0 +1,280 @@
+---
+title: "Pert 9 - Shiny"
+author: "YOHANES FEBRYAN KANA NYOLA_123220198"
+date: "2024-11-19"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Regresi Logistik dan Shiny App
+
+### Import Library
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(nnet) # Model multinomial logistic regression
+
+library(shiny) # Aplikasi
+library(bslib)
+
+library(datasets) # Dataset iris
+```
+
+### Import Data
+
+```{r}
+data(iris)
+# View(iris)
+```
+
+## Regresi Logistik
+
+### Inisialisasi Kelas
+
+```{r}
+kelas = levels(iris$Species)
+kelas
+```
+
+### Data Splitting
+
+```{r}
+# Set seed untuk memastikan hasil pembagian data yang sama setiap kali dijalankan
+set.seed(420)
+
+# Membagi dataset Iris menjadi 80% data latih (training) dan 20% data uji (testing), dengan stratifikasi berdasarkan kolom Species
+split = initial_split(iris, prop = 0.8, strata = Species)
+
+# Membuat dataset latih dari pembagian data
+iris_train = split %>% training()
+
+# Membuat dataset uji dari pembagian data
+iris_test = split %>% testing()
+
+# Meringkas data latih berdasarkan spesies, menghitung frekuensi setiap spesies
+iris_train %>%
+  select(Species) %>% # Memilih kolom Species
+  group_by(Species) %>% # Mengelompokkan data berdasarkan Species
+  summary(freq=n()) # Meringkas jumlah data per spesies
+
+# Meringkas data uji berdasarkan spesies, menghitung frekuensi setiap spesies
+iris_test %>%
+  select(Species) %>% # Memilih kolom Species
+  group_by(Species) %>% # Mengelompokkan data berdasarkan Species
+  summary(freq=n()) # Meringkas jumlah data per spesies
+```
+
+### Modelling
+
+```{r}
+# Melatih model multinomial logistic regression menggunakan dataset latih
+hasil_model = multinom(
+  Species ~ ., # Species adalah variabel target, sedangkan "." merepresentasikan semua fitur lain sebagai prediktor
+  data = iris_train # Data latih yang digunakan untuk melatih model
+)
+
+# Menampilkan ringkasan model multinomial logistic regression
+summary(hasil_model)
+```
+
+### Data Testing
+
+```{r}
+# type = "probs", outputnya berupa probabilitas tiap kelas
+
+# Membuat prediksi probabilitas untuk data uji menggunakan model yang telah dilatih
+hasil_prediksi_probs = predict(
+  hasil_model, # Model multinomial logistic regression yang telah dilatih
+  newdata = iris_test, # Data uji yang digunakan untuk prediksi
+  type = "probs" # Menghasilkan probabilitas untuk setiap kelas (bukan prediksi kelas langsung)
+)
+
+# Mengonversi probabilitas menjadi persentase dan membulatkan hingga 2 desimal
+hasil_prediksi_probs = round(hasil_prediksi_probs * 100 , digits = 2)
+
+# Menampilkan hasil prediksi probabilitas dalam bentuk tabel
+hasil_prediksi_probs
+```
+
+```{r}
+# type = "class", outputnya berupa kelas
+
+# Membuat prediksi kelas untuk data uji menggunakan model multinomial logistic regression
+hasil_prediksi_class = predict(
+  hasil_model, # Model yang telah dilatih sebelumnya
+  newdata = iris_test, # Dataset uji yang akan diprediksi
+  type = "class" # Parameter "class" mengembalikan prediksi kelas langsung
+)
+
+# Menampilkan hasil prediksi kelas
+hasil_prediksi_class
+```
+
+### Evaluasi Model
+
+```{r}
+# Membuat tabel perbandingan antara kelas yang diprediksi dan kelas sebenarnya
+table(
+  predicted_class = hasil_prediksi_class, # Kelas yang diprediksi oleh model
+  actual_class = iris_test$Species # Kelas sebenarnya dari data uji
+)
+
+# Menghitung akurasi model secara manual
+akurasi = (10 + 8 + 10) / (10 + 8 + 2 + 10) * 100 # (Jumlah prediksi benar) / (Total prediksi) * 100
+
+# Menampilkan nilai akurasi
+akurasi
+```
+
+```{r}
+# Membuat data frame baru
+data_frame = data.frame(
+  predicted_class = hasil_prediksi_class, # Kolom pertama: hasil prediksi
+  actual_class = iris_test$Species # Kolom kedua: kelas aktual dari data test
+)
+
+nrow(data_frame %>% # Hitung jumlah baris dari data frame
+       filter(predicted_class == actual_class)) / # Filter baris di mana prediksi sama dengan kelas aktual
+  nrow(data_frame) * 100 # Bagi dengan jumlah total baris, lalu dikalikan 100 untuk menghitung akurasi
+```
+
+## Shiny App
+
+### Membuat UI
+
+```{r}
+ui = fluidPage(
+  # Tambahkan CSS untuk tata letak tengah
+  tags$style(HTML("
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    table {
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    .main-title {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  ")),
+  
+  # Judul utama di luar div "center"
+  div(
+    class = "main-title",
+    titlePanel("Dataset Iris")
+  ),
+
+  # Wrapper div untuk elemen di tengah
+  div(
+    class = "center",
+    
+    # Dropdown untuk memilih spesies
+    selectInput(
+      inputId = "species",
+      label = "Pilih Jenis Spesies : ",
+      choices = kelas
+    ),
+    
+    # Output tabel
+    tableOutput(outputId = "table_iris"),
+    
+    # Jarak tambahan
+    tags$br(),
+    
+    # Judul kedua
+    titlePanel("Uji Coba"),
+    
+    # Layout untuk input kolom
+    fluidRow(
+      column(3, numericInput(inputId = "sl", label = "Sepal Length", value = 1)),
+      column(3, numericInput(inputId = "sw", label = "Sepal Width", value = 1)),
+      column(3, numericInput(inputId = "pl", label = "Petal Length", value = 1)),
+      column(3, numericInput(inputId = "pw", label = "Petal Width", value = 1))
+    ),
+    
+    # Tombol klasifikasi
+    actionButton(
+      inputId = "klasifikasi",
+      label = "Klasifikasi"
+    ),
+    
+    # Jarak tambahan
+    tags$br(),
+    tags$br(),
+    
+    # Output hasil klasifikasi
+    textOutput(outputId = "hasil_klasifikasi"),
+    
+    # Jarak tambahan
+    tags$br()
+  )
+)
+```
+
+### Membuat Logika Di Belakang Layar
+
+```{r}
+server = function(input, output){ # Definisi fungsi server untuk Shiny
+  output$table_iris = renderTable( # Membuat output tabel untuk menampilkan data iris
+    head( # Menampilkan 10 baris pertama
+      iris %>%  # Data iris
+        filter( # Filter data sesuai spesies
+          Species == input$species # Kondisi filter: spesies sesuai input dari pengguna
+        ),
+      10 # Ambil 10 baris pertama
+    )
+  )
+  
+  output$hasil_klasifikasi = renderText({ # Membuat output berupa teks hasil klasifikasi
+    input_prediksi = data.frame( # Membuat data frame baru untuk prediksi
+      Sepal.Length = input$sl, # Kolom panjang sepal dari input pengguna
+      Sepal.Width = input$sw, # Kolom lebar sepal dari input pengguna
+      Petal.Length = input$pl, # Kolom panjang petal dari input pengguna
+      Petal.Width = input$pw # Kolom lebar petal dari input pengguna
+    )
+    
+    hasil_class = predict( # Melakukan prediksi menggunakan model
+      hasil_model, # Model yang telah dilatih
+      newdata = input_prediksi, # Data input untuk prediksi
+      type = "class" # Prediksi berupa kelas (label)
+    )
+    
+    nama_kelas = kelas[hasil_class] # Mengambil nama kelas dari hasil prediksi
+    
+    hasil_probs = predict( # Menghitung probabilitas dari prediksi
+      hasil_model, # Model yang telah dilatih
+      newdata = input_prediksi, # Data input untuk prediksi
+      type = "probs" # Prediksi berupa probabilitas
+    )
+    
+    persentase = round( # Menghitung probabilitas tertinggi dan membulatkan
+      max(hasil_probs) * 100, # Ambil probabilitas maksimum dan konversi ke persen
+      digits = 2 # Membulatkan hingga 2 angka desimal
+    )
+    
+    paste( # Menggabungkan nama kelas dan persentase ke dalam string
+      nama_kelas, # Nama kelas hasil prediksi
+      " (",
+      persentase, # Persentase prediksi
+      "%)",
+      sep = "" # Menghilangkan spasi tambahan
+    )
+  })|> bindEvent(input$klasifikasi) # Render output hanya ketika tombol klasifikasi diklik
+}
+```
+
+### Run Aplikasi
+
+```{r}
+shinyApp(ui,server) # Menjalankan aplikasi Shiny dengan antarmuka pengguna (UI) dan fungsi server
+```
