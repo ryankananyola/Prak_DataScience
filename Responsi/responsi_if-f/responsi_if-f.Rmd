@@ -1,0 +1,184 @@
+---
+title: "Responsi IF-F"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Responsi
+
+## Instruksi
+
+1.  Baca soal dengan seksama dan jawab dengan sesuai
+2.  Kerjakan secara mandiri
+3.  Waktu mengerjakan adalah 2 jam dan pengumpulan diberi waktu tambahan 10 menit (13.00 - 15.10)
+4.  Kumpulkan dalam bentuk pdf dengan format penamaan NIM_Nama_Responsi.pdf
+
+## Import Library (5 poin)
+
+Import library yang dibutuhkan secara berkala.
+
+```{r}
+library(tidymodels)
+library(tidyverse)
+library(here)
+
+library(ggplot2)
+```
+
+## Import Dataset (5 poin)
+
+Import dataset housing1.csv dan housing2.csv yang terlampir di SPADA.
+
+```{r}
+# housing1.csv
+path = here('data-raw', 'housing1.csv')
+housing1 = read.csv(path)
+head(housing1,5)
+```
+
+```{r}
+# housing2.csv
+path = here('data-raw', 'housing2.csv')
+housing2 = read.csv(path)
+head(housing2,5)
+```
+
+
+## Preprocessing Data
+
+### Join Table (10 poin)
+
+Gabungkan kedua dataset yang sudah di-import berdasarkan kolom yang sama.
+
+```{r}
+housing_combined = left_join(housing1, housing2, by = 'id')
+head(housing_combined, 5)
+# View(housing_combined)
+```
+
+### Encoding Data (15 poin)
+
+Pada kolom Neighborhood, tipe datanya masih berupa character. Ubah menjadi factor, lalu tampilkan apa saja levelnya.
+
+```{r}
+housing_combined$Neighborhood = factor(housing_combined$Neighborhood)
+class(housing_combined$Neighborhood)
+levels(housing_combined$Neighborhood)
+```
+
+Ubah tiap level menjadi numerik agar bisa dilakukan clustering.
+
+```{r}
+housing_combined$NeighborhoodLevel = as.numeric(housing_combined$Neighborhood)
+```
+
+### Data Filtering (7 poin)
+
+Karena data rumah terlalu banyak, gunakan data rumah yang dibangun pada tahun 1995-2005 saja.
+
+```{r}
+new_housing = housing_combined %>%
+  filter(YearBuilt >= 1995 & YearBuilt <= 2005)
+# View(new_housing)
+```
+
+### Scaling Data (8 poin)
+
+Tiap kolom masih memiliki range yang beragam. Seragamkan range dari tiap kolom yang bertipe numerik (kecuali id).
+
+```{r}
+housing_scaled = new_housing %>%
+  select(-id,-Neighborhood) %>%
+  scale()
+
+head(housing_scaled,10)
+```
+
+
+
+## Data Modelling
+
+### Tentukan Nilai k (25 poin)
+
+Sebelum membuat model, tentukan jumlah cluster atau nilai k yang paling optimal dengan menggunakan Elbow Method. Jangan lupa beri keterangan pada grafik.
+
+```{r}
+set.seed(123) 
+wcss = sapply(1:10, function(k) {
+  kmeans(housing_scaled, centers = k, nstart = 25)$tot.withinss
+})
+
+elbow_plot = data.frame(Clusters = 1:10, WCSS = wcss)
+
+ggplot(
+  elbow_plot,
+  aes(
+    x = Clusters,
+    y = WCSS
+    )
+  ) +
+  geom_line(
+    color = "cyan",
+    size = 1
+  ) +
+  geom_point(
+    color = "yellow",
+    size = 2
+    ) +
+  labs(
+    title = "Elbow Method untuk Menentukan Jumlah Cluster",
+    x = "Jumlah Cluster (k)",
+    y = "Within-Cluster Sum of Squares (WCSS)"
+  ) +
+  theme_minimal()
+
+```
+
+
+### Buat Cluster (12 poin)
+
+Karena sudah menemukan jumlah cluster yang ideal, buat cluster menggunakan metode k-means. Hasil cluster dimasukkan sebagai kolom baru pada dataset housing sebelum scaling. Ubah tipe data kolom cluster menjadi factor.
+
+```{r}
+set.seed(123)
+optimal_k = 3
+kmeans_result = kmeans(housing_scaled, centers = optimal_k, nstart = 25)
+
+new_housing$Cluster = as.factor(kmeans_result$cluster)
+
+head(new_housing)
+
+```
+
+## Visualisasi Data (13 poin)
+
+Visualisasikan cluster dengan menggunakan ggplot2. Buat grafik luas rumah dengan harga, lalu beri warna sesuai cluster. Berikan keterangan pada grafik.
+
+```{r}
+ggplot(
+  new_housing,
+  aes(
+    x = SquareFeet,
+    y = Price,
+    color = Cluster
+    )
+  ) +
+  geom_point(
+    alpha = 0.6,
+    size = 2
+  ) +
+  labs(
+    title = "Visualisasi Cluster Berdasarkan Luas Rumah dan Harga",
+    x = "Luas Rumah",
+    y = "Harga Rumah",
+    color = "Cluster"
+  ) +
+  theme_minimal()
+
+```
+
+
